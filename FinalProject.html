@@ -96,9 +96,6 @@ if (!file.exists(testFilePath)) {
 trainingD &lt;- read.csv(trainFilePath, na.strings=c(&quot;&quot;, &quot;NA&quot;, &quot;NULL&quot;))
 testingD &lt;- read.csv(testFilePath, na.strings=c(&quot;&quot;, &quot;NA&quot;, &quot;NULL&quot;))</code></pre>
 </div>
-<div id="data-exploring" class="section level2">
-<h2>Data exploring</h2>
-</div>
 <div id="data-cleaning" class="section level2">
 <h2>Data cleaning</h2>
 <pre class="r"><code>#Remove columns with many NA
@@ -208,7 +205,10 @@ confusionMatrix(pred1,testing$classe)</code></pre>
 </div>
 <div id="predicting" class="section level1">
 <h1>Predicting</h1>
-<pre class="r"><code>pred2&lt;-predict(rfModel1,newdata = testD)</code></pre>
+<pre class="r"><code>pred2&lt;-predict(rfModel1,newdata = testD)
+pred2</code></pre>
+<pre><code>##  [1] B A B A A E D B A A B C B A E E A B B B
+## Levels: A B C D E</code></pre>
 </div>
 
 
