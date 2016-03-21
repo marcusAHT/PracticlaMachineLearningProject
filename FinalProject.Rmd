@@ -1,0 +1,70 @@
+---
+title: 'Practical Machine Learning: Prediction Assignment'
+output: html_document
+---
+## Packages
+```{r,message= F,warning= F}
+require(caret)
+require(rpart)
+require(randomForest)
+```
+## Reading Data
+Save the data on disk if it isn't there yet, just to save time when reading files on several runs
+```{r, message=F, warning=F}
+setwd("~/DataScCoursera/PracticalMachineLearning")
+trainDataUrl <- "http://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
+testDataUrl <- "http://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
+trainFilePath <- "./data/pml-training.csv"
+testFilePath  <- "./data/pml-testing.csv"
+
+library(R.utils) 
+dlMethod <- "curl"
+if(substr(Sys.getenv("OS"),1,7) == "Windows") dlMethod <- "wininet"
+	
+if (!file.exists("./data")) {
+  dir.create("./data")
+}
+if (!file.exists(trainFilePath)) {
+  download.file(trainDataUrl, destfile=trainFilePath, method=dlMethod)
+}
+if (!file.exists(testFilePath)) {
+  download.file(testDataUrl, destfile=testFilePath, method=dlMethod)
+}
+
+trainingD <- read.csv(trainFilePath, na.strings=c("", "NA", "NULL"))
+testingD <- read.csv(testFilePath, na.strings=c("", "NA", "NULL"))
+```
+
+## Data cleaning
+```{r}
+#Remove columns with many NA
+#only columns with less that 20% of their content being NA will be taken
+predictorCandidates<-(colSums(is.na(trainingD)))/nrow(trainingD) < 0.2 
+#Remove columns that don't seem relevant. 7 first columns
+predictorCandidates[1:7]<-FALSE
+#Remove variables with near zero variables
+predictorCandidates<- predictorCandidates & !nearZeroVar(trainingD, saveMetrics=TRUE)$nzv
+trainD<-trainingD[,predictorCandidates]
+predictorCandidates[names(predictorCandidates)=="classe"]=FALSE;
+testD<-testingD[,names(trainingD)[predictorCandidates]];
+```
+## Partition Data
+```{r}
+set.seed(435426)
+indTrain<-createDataPartition(y = trainD$classe,p=0.7,list=FALSE)
+training<-trainD[indTrain,]
+testing<-trainD[-indTrain,]
+```
+# Modeling
+```{r}
+control<-trainControl(method="cv", number=5, allowParallel=T, verbose=T)
+rfModel1<-train(classe~.,data=training, method="rf", trControl=control, verbose=FALSE, allowParallel=TRUE)
+rfModel1$finalModel
+pred1<-predict(rfModel1,newdata = testing)
+confusionMatrix(pred1,testing$classe)
+```
+#Predicting
+```{r}
+pred2<-predict(rfModel1,newdata = testD)
+pred2
+```
